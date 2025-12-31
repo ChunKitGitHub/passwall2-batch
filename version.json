@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
     "changelog": "初始版本\n- 批量导入 HTTP 节点\n- 自动生成分流配置\n- 自动分配 SOCKS 端口\n- 节点在线状态检测\n- 支持在线更新",
-    "ipk_url": "https://raw.githubusercontent.com/setcloudworld/passwall2-batch/main/passwall2-batch_latest.ipk",
+    "ipk_url": "https://raw.githubusercontent.com/ChunKitGitHub/passwall2-batch/main/passwall2-batch_latest.ipk",
     "release_date": "2026-01-01"
 }
