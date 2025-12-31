@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passwall2 批量导入工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-box .number {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .stat-box .label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-group textarea {
+            height: 180px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+        }
+        .form-group select[multiple] {
+            height: 100px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .help-text {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: #555;
+        }
+        .help-text code {
+            background: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-info:hover {
+            background: #138496;
+        }
+        .message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .message.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .tag-http { background: #667eea; color: white; }
+        .tag-shunt { background: #28a745; color: white; }
+        .tag-socks { background: #17a2b8; color: white; }
+        .tag-group { background: #ffc107; color: #333; }
+        .tag-expire { background: #fd7e14; color: white; }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        .btn-xs {
+            padding: 3px 8px;
+            font-size: 11px;
+            margin: 1px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        /* 节点组样式 */
+        .node-group {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .node-group-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .node-group-header .node-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .node-group-header .node-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        .node-group-header .node-address {
+            color: #666;
+            font-size: 13px;
+            font-family: monospace;
+        }
+        .node-group-children {
+            background: #fafafa;
+            padding: 10px 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .node-child {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .node-child:last-child {
+            margin-bottom: 0;
+        }
+        .node-child-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .toolbar input[type="text"] {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            width: 200px;
+        }
+        .select-all-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Tab 切换 */
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+        }
+        .tab-btn {
+            padding: 12px 25px;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+        .tab-btn:first-child {
+            border-radius: 10px 0 0 0;
+        }
+        .tab-btn:last-child {
+            border-radius: 0 10px 0 0;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 0 10px 10px 10px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 复制按钮样式 */
+        .copy-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        .copy-btn:hover {
+            background: #5a6268;
+        }
+        .copy-btn.copied {
+            background: #28a745;
+        }
+
+        /* SOCKS 信息样式 */
+        .socks-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .socks-detail {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        /* 规则项样式 */
+        .rule-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .rule-item .rule-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .rule-item .rule-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .rule-order {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .rule-order button {
+            padding: 2px 6px;
+            font-size: 10px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .rule-order button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* 测试状态样式 */
+        .test-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        .test-status.testing {
+            background: #ffc107;
+            color: #333;
+        }
+        .test-status.success {
+            background: #28a745;
+            color: white;
+        }
+        .test-status.fail {
+            background: #dc3545;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .node-group-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-content h3 {
+            margin: 0 0 20px 0;
+            color: #333;
+        }
+        .modal-footer {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+        .modal-header h3 {
+            margin: 0;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .close-btn:hover {
+            color: #333;
+        }
+
+        /* 预览表格样式 */
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .preview-table th,
+        .preview-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .preview-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        /* 成功弹窗样式 */
+        .success-modal .modal-content {
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        .success-modal h3 {
+            color: #28a745;
+        }
+        .success-message {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .countdown {
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>Passwall2 批量导入工具</h1>
+                    <p>批量导入 HTTP 节点，自动生成分流配置和 SOCKS 端口</p>
+                </div>
+                <div style="text-align: right; color: #888; font-size: 12px;">
+                    版本: <span id="currentVersion">1.0.0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <!-- 统计 -->
+        <div class="stats">
+            <div class="stat-box" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="number" id="onlineCount">-</div>
+                <div class="label">在线节点</div>
+            </div>
+            <div class="stat-box" style="background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);">
+                <div class="number" id="offlineCount">-</div>
+                <div class="label">掉线节点</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="httpCount">0</div>
+                <div class="label">HTTP 节点</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="shuntCount">0</div>
+                <div class="label">分流节点</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="socksCount">0</div>
+                <div class="label">SOCKS 配置</div>
+            </div>
+        </div>
+
+        <!-- 输入节点和配置 -->
+        <div class="card">
+            <h2>1. 导入节点</h2>
+            <div class="import-layout" style="display: flex; gap: 20px;">
+                <!-- 左侧：输入区域 -->
+                <div style="flex: 1;">
+                    <div class="help-text">
+                        支持两种格式，每行一个节点：<br>
+                        格式1：<code>IP:端口 用户名 密码 到期时间 备注</code>（空格分隔）<br>
+                        格式2：<code>IP:端口:用户名:密码:到期时间:备注</code>（冒号分隔）<br>
+                        <small style="color:#888;">到期时间格式为 YYYY-MM-DD，可选字段</small>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <textarea id="nodeInput" style="height: 180px;" placeholder="示例格式（每行一个节点）：
+1.2.3.4:8080 username password 2026-01-30 备注
+5.6.7.8:8080 username password 2026-02-15 备注"></textarea>
+                    </div>
+                    <!-- 配置选项 -->
+                    <div class="form-row" style="margin-bottom: 10px;">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label>SOCKS 起始端口</label>
+                            <input type="number" id="startPort" value="1081">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label>节点分组名</label>
+                            <input type="text" id="groupName" value="批量导入" placeholder="如：江西、河南">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>分流规则（选择哪些规则走直连）</label>
+                        <select id="shuntRules" multiple style="height: 80px;">
+                            <option value="ImageDirect" selected>图片直连</option>
+                        </select>
+                        <small style="color: #888;">按住 Ctrl/Cmd 可多选</small>
+                    </div>
+                </div>
+                <!-- 右侧：操作按钮 -->
+                <div style="display: flex; flex-direction: column; gap: 10px; min-width: 120px;">
+                    <button class="btn btn-warning" onclick="checkUpdate()" style="width: 100%;">检查更新</button>
+                    <button class="btn btn-primary" onclick="importNodes()" style="width: 100%;">导入节点</button>
+                    <button class="btn btn-success" onclick="restartPasswall()" style="width: 100%;">重启 Passwall2</button>
+                    <button class="btn btn-info" id="socksToggleBtn" onclick="toggleSocks()" style="width: 100%;">开启 SOCKS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 切换区域 -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTab('rules')">分流规则管理</button>
+                    <button class="tab-btn" onclick="switchTab('nodes')">现有节点列表</button>
+                </div>
+
+                <!-- 分流规则 Tab -->
+                <div id="rulesTab" class="tab-content active">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="help-text" style="margin: 0; flex: 1;">
+                            分流规则用于指定哪些流量走直连。例如 <code>ImageDirect</code> 规则可以让图片请求直连。
+                        </div>
+                        <button class="btn btn-primary" onclick="openAddRuleModal()">添加规则</button>
+                    </div>
+                    <div id="shuntRulesList">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 节点列表 Tab -->
+                <div id="nodesTab" class="tab-content">
+                    <div class="toolbar">
+                        <button class="btn btn-secondary btn-sm" onclick="loadExistingNodes()">刷新列表</button>
+                        <button class="btn btn-warning btn-sm" onclick="testAllNodes()">一键测试</button>
+                        <button class="btn btn-info btn-sm" onclick="exportSocks()">一键导出</button>
+                        <button class="btn btn-primary btn-sm" onclick="openExitIpModal()">测试出口IP</button>
+                        <input type="text" id="searchInput" placeholder="搜索节点..." oninput="filterNodes()">
+                        <div class="select-all-wrapper">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            <label for="selectAll" style="font-size:13px;">全选</label>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="batchDelete()">批量删除</button>
+                    </div>
+                    <div id="existingNodesList">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑节点弹窗 -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>编辑节点</h3>
+                    <button class="close-btn" onclick="closeEditModal()">&times;</button>
+                </div>
+                <input type="hidden" id="editNodeId">
+                <div class="form-group">
+                    <label>备注</label>
+                    <input type="text" id="editRemarks">
+                </div>
+                <div class="form-group">
+                    <label>分组</label>
+                    <input type="text" id="editGroup">
+                </div>
+                <div class="form-group">
+                    <label>地址</label>
+                    <input type="text" id="editAddress">
+                </div>
+                <div class="form-group">
+                    <label>端口</label>
+                    <input type="text" id="editPort">
+                </div>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="editUsername">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="text" id="editPassword">
+                </div>
+                <div class="form-group">
+                    <label>到期时间</label>
+                    <input type="date" id="editExpireDate">
+                </div>
+                <div id="testResult" style="margin-bottom: 15px; display: none;"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                    <button class="btn btn-warning" id="testNodeBtn" onclick="testNode()">测试连接</button>
+                    <button class="btn btn-primary" onclick="saveNode()">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加分流规则弹窗 -->
+        <div id="addRuleModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>添加分流规则</h3>
+                    <button class="close-btn" onclick="closeAddRuleModal()">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>规则 ID（英文，如 ImageDirect）</label>
+                    <input type="text" id="newRuleId" placeholder="ImageDirect">
+                </div>
+                <div class="form-group">
+                    <label>规则名称（备注）</label>
+                    <input type="text" id="newRuleRemarks" placeholder="图片直连">
+                </div>
+                <div class="form-group">
+                    <label>域名列表（每行一个域名或正则）</label>
+                    <textarea id="newRuleDomains" style="height:100px;" placeholder="例如：&#10;geosite:google&#10;domain:example.com"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>IP 列表（每行一个 IP 或 CIDR）</label>
+                    <textarea id="newRuleIPs" style="height:100px;" placeholder="例如：&#10;geoip:cn&#10;192.168.0.0/16"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeAddRuleModal()">取消</button>
+                    <button class="btn btn-primary" onclick="addShuntRule()">添加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑分流规则弹窗 -->
+        <div id="editRuleModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>编辑分流规则</h3>
+                    <button class="close-btn" onclick="closeEditRuleModal()">&times;</button>
+                </div>
+                <input type="hidden" id="editRuleId">
+                <div class="form-group">
+                    <label>规则名称（备注）</label>
+                    <input type="text" id="editRuleRemarks" placeholder="图片直连">
+                </div>
+                <div class="form-group">
+                    <label>域名列表（每行一个域名或正则）</label>
+                    <textarea id="editRuleDomains" style="height:100px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>IP 列表（每行一个 IP 或 CIDR）</label>
+                    <textarea id="editRuleIPs" style="height:100px;"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeEditRuleModal()">取消</button>
+                    <button class="btn btn-primary" onclick="saveShuntRule()">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导入成功弹窗 -->
+        <div id="successModal" class="modal success-modal">
+            <div class="modal-content">
+                <div class="success-icon">&#10003;</div>
+                <h3>导入成功</h3>
+                <div class="success-message" id="successMessage">成功导入 0 个节点</div>
+                <div class="countdown" id="countdownText">正在重启 Passwall2... <span id="countdown">3</span>秒后自动关闭</div>
+                <div class="modal-footer" style="text-align: center;">
+                    <button class="btn btn-primary" onclick="closeSuccessModal()">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导入失败弹窗（重复节点） -->
+        <div id="duplicateModal" class="modal">
+            <div class="modal-content">
+                <div class="error-icon" style="font-size: 48px; color: #fd7e14; text-align: center; margin-bottom: 15px;">&#9888;</div>
+                <h3 style="text-align: center; color: #fd7e14;">发现重复节点</h3>
+                <div style="text-align: center; margin: 20px 0; color: #666;">以下节点的 IP:端口 已存在：</div>
+                <div id="duplicateList" style="background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-family: monospace;"></div>
+                <div id="duplicateInfo" style="text-align: center; margin-top: 15px; color: #666;"></div>
+                <div class="modal-footer" style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="closeDuplicateModal()">取消导入</button>
+                    <button class="btn btn-primary" onclick="importNodesSkipDuplicates()">跳过重复，继续导入</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 测试出口 IP 弹窗 -->
+        <div id="exitIpModal" class="modal">
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h3>测试出口 IP</h3>
+                    <button class="close-btn" onclick="closeExitIpModal()">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>选择 SOCKS 代理</label>
+                    <select id="testSocksSelect" style="width: 100%;">
+                        <option value="">直连（不使用代理）</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-primary" onclick="runExitIpTest()">开始测试</button>
+                    <button class="btn btn-secondary" onclick="runExitIpTestDirect()">测试直连</button>
+                </div>
+                <div id="exitIpTestResult" style="display: none;">
+                    <div class="help-text" style="margin-bottom: 15px;">
+                        <strong>出口 IP：</strong><span id="exitIpValue" style="font-family: monospace; font-size: 16px; color: #667eea;">-</span>
+                    </div>
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                <th>测试 URL</th>
+                                <th>状态码</th>
+                                <th>连接 IP</th>
+                                <th>结果</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exitIpTestBody"></tbody>
+                    </table>
+                </div>
+                <div id="exitIpTestLoading" style="display: none; text-align: center; padding: 30px; color: #666;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+                    测试中，请稍候...
+                </div>
+            </div>
+        </div>
+
+        <!-- 更新弹窗 -->
+        <div id="updateModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>版本更新</h3>
+                    <button class="close-btn" onclick="closeUpdateModal()">&times;</button>
+                </div>
+                <div id="updateContent">
+                    <div class="loading">检查中...</div>
+                </div>
+                <div id="updateActions" class="modal-footer" style="display: none;">
+                    <button class="btn btn-secondary" onclick="closeUpdateModal()">取消</button>
+                    <button class="btn btn-primary" onclick="doUpdate()">立即更新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let parsedNodes = [];
+        let allNodes = [];
+        let allSocks = [];
+        let allRules = [];
+        let nodeGroups = [];
+        let duplicateNodes = [];  // 保存重复节点列表
+        let gatewayIP = '192.168.1.1';  // 默认网关IP，会尝试获取
+        const API_BASE = '/cgi-bin/passwall2-batch';
+        const CURRENT_VERSION = '1.0.0';
+        const UPDATE_URL = 'https://raw.githubusercontent.com/ChunKitGitHub/passwall2-batch/main/version.json';
+        let latestVersionInfo = null;
+
+        // 默认系统规则（不显示，不可删除）
+        const DEFAULT_SYSTEM_RULES = [
+            'DirectGame', 'ProxyGame', 'Direct', 'GooglePlay', 'Netflix',
+            'OpenAI', 'Proxy', 'China', 'QUIC', 'UDP'
+        ];
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            loadShuntRules();
+            loadExistingNodes();
+            getGatewayIP();
+            checkAndCreateDefaultRules();
+            loadSocksStatus();
+            // 每30秒自动检测一次节点状态
+            setInterval(checkNodesStatus, 30000);
+        });
+
+        // 获取网关IP
+        function getGatewayIP() {
+            // 尝试从当前URL获取网关
+            const host = window.location.hostname;
+            if (host && host !== 'localhost' && host !== '127.0.0.1') {
+                gatewayIP = host;
+            }
+        }
+
+        // 检查并创建默认规则
+        function checkAndCreateDefaultRules() {
+            fetch(API_BASE + '/check_default_rules', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.created) {
+                        loadShuntRules();
+                    }
+                })
+                .catch(err => console.log('检查默认规则:', err));
+        }
+
+        // 获取 SOCKS 主开关状态
+        function loadSocksStatus() {
+            fetch(API_BASE + '/get_socks_status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        updateSocksButton(data.enabled);
+                    }
+                })
+                .catch(err => console.error('获取SOCKS状态失败:', err));
+        }
+
+        // 更新 SOCKS 按钮状态
+        function updateSocksButton(enabled) {
+            const btn = document.getElementById('socksToggleBtn');
+            if (enabled) {
+                btn.textContent = '关闭 SOCKS';
+                btn.className = 'btn btn-danger';
+                btn.style.width = '100%';
+            } else {
+                btn.textContent = '开启 SOCKS';
+                btn.className = 'btn btn-info';
+                btn.style.width = '100%';
+            }
+        }
+
+        // 切换 SOCKS 主开关
+        function toggleSocks() {
+            const btn = document.getElementById('socksToggleBtn');
+            btn.disabled = true;
+            btn.textContent = '处理中...';
+
+            fetch(API_BASE + '/toggle_socks', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    if (data.success) {
+                        updateSocksButton(data.enabled);
+                        showMessage(data.message, 'success');
+                    } else {
+                        showMessage(data.message || '操作失败', 'error');
+                        loadSocksStatus(); // 重新获取状态
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    showMessage('操作失败: ' + err.message, 'error');
+                    loadSocksStatus();
+                });
+        }
+
+        // 导出 SOCKS 列表
+        function exportSocks() {
+            window.location.href = API_BASE + '/export_socks';
+        }
+
+        // 在线/离线计数器
+        let onlineCount = 0;
+        let offlineCount = 0;
+        let isCheckingStatus = false;
+
+        // 更新在线/离线统计显示
+        function updateOnlineStats() {
+            document.getElementById('onlineCount').textContent = onlineCount;
+            document.getElementById('offlineCount').textContent = offlineCount;
+        }
+
+        // 测试单个节点并更新统计
+        async function testNodeAndUpdateStats(node) {
+            const statusEl = document.getElementById(`test-status-${node.id}`);
+
+            if (!node.address || !node.port) {
+                offlineCount++;
+                updateOnlineStats();
+                if (statusEl) {
+                    statusEl.className = 'test-status fail';
+                    statusEl.textContent = '无效';
+                }
+                return false;
+            }
+
+            if (statusEl) {
+                statusEl.className = 'test-status testing';
+                statusEl.textContent = '测试...';
+            }
+
+            try {
+                const response = await fetch(API_BASE + '/test_node', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address: node.address,
+                        port: node.port,
+                        username: node.username,
+                        password: node.password
+                    })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    onlineCount++;
+                    updateOnlineStats();
+                    if (statusEl) {
+                        statusEl.className = 'test-status success';
+                        statusEl.textContent = `${result.latency}ms`;
+                    }
+                    return true;
+                } else {
+                    offlineCount++;
+                    updateOnlineStats();
+                    if (statusEl) {
+                        statusEl.className = 'test-status fail';
+                        statusEl.textContent = '离线';
+                    }
+                    return false;
+                }
+            } catch (e) {
+                offlineCount++;
+                updateOnlineStats();
+                if (statusEl) {
+                    statusEl.className = 'test-status fail';
+                    statusEl.textContent = '错误';
+                }
+                return false;
+            }
+        }
+
+        // 限制并发数的批量测试（最多同时3个）
+        async function testNodesWithLimit(nodes, concurrentLimit = 3) {
+            const results = [];
+            const executing = [];
+
+            for (const node of nodes) {
+                const promise = testNodeAndUpdateStats(node).then(result => {
+                    executing.splice(executing.indexOf(promise), 1);
+                    return result;
+                });
+                results.push(promise);
+                executing.push(promise);
+
+                if (executing.length >= concurrentLimit) {
+                    await Promise.race(executing);
+                }
+            }
+
+            return Promise.all(results);
+        }
+
+        // 检测所有节点状态（限制并发）
+        async function checkNodesStatus() {
+            if (isCheckingStatus) return;
+            if (allNodes.length === 0) {
+                document.getElementById('onlineCount').textContent = '-';
+                document.getElementById('offlineCount').textContent = '-';
+                return;
+            }
+
+            isCheckingStatus = true;
+            const httpNodes = allNodes.filter(n => n.protocol === 'http' && !isSystemNode(n));
+
+            if (httpNodes.length === 0) {
+                document.getElementById('onlineCount').textContent = '0';
+                document.getElementById('offlineCount').textContent = '0';
+                isCheckingStatus = false;
+                return;
+            }
+
+            // 重置计数器
+            onlineCount = 0;
+            offlineCount = 0;
+            updateOnlineStats();
+
+            // 标记所有节点为等待测试
+            for (const node of httpNodes) {
+                const statusEl = document.getElementById(`test-status-${node.id}`);
+                if (statusEl) {
+                    statusEl.className = 'test-status testing';
+                    statusEl.textContent = '等待...';
+                }
+            }
+
+            // 限制并发数测试
+            await testNodesWithLimit(httpNodes, 3);
+
+            isCheckingStatus = false;
+        }
+
+        // 一键测试所有节点（限制并发）
+        async function testAllNodes() {
+            const httpNodes = allNodes.filter(n => n.protocol === 'http' && !isSystemNode(n));
+            if (httpNodes.length === 0) {
+                showMessage('没有可测试的HTTP节点', 'error');
+                return;
+            }
+
+            if (isCheckingStatus) {
+                showMessage('正在测试中，请稍候...', 'error');
+                return;
+            }
+
+            isCheckingStatus = true;
+            showMessage(`开始测试 ${httpNodes.length} 个节点...`, 'success');
+
+            // 重置计数器
+            onlineCount = 0;
+            offlineCount = 0;
+            updateOnlineStats();
+
+            // 标记所有节点为等待测试
+            for (const node of httpNodes) {
+                const statusEl = document.getElementById(`test-status-${node.id}`);
+                if (statusEl) {
+                    statusEl.className = 'test-status testing';
+                    statusEl.textContent = '等待...';
+                }
+            }
+
+            // 限制并发数测试
+            await testNodesWithLimit(httpNodes, 3);
+
+            isCheckingStatus = false;
+            showMessage(`测试完成！在线: ${onlineCount}, 离线: ${offlineCount}`, onlineCount > 0 ? 'success' : 'error');
+        }
+
+        // 打开测试出口 IP 弹窗
+        function openExitIpModal() {
+            // 填充 SOCKS 代理选项
+            const select = document.getElementById('testSocksSelect');
+            select.innerHTML = '<option value="">直连（不使用代理）</option>';
+
+            // 从已有的 SOCKS 配置中获取
+            for (const group of nodeGroups) {
+                if (group.socks && group.socks.enabled === '1') {
+                    const remarks = group.http ? group.http.remarks : (group.shunt ? group.shunt.remarks : '');
+                    select.innerHTML += `<option value="${group.socks.port}">${gatewayIP}:${group.socks.port} - ${escapeHtml(remarks)}</option>`;
+                }
+            }
+
+            // 重置结果区域
+            document.getElementById('exitIpTestResult').style.display = 'none';
+            document.getElementById('exitIpTestLoading').style.display = 'none';
+
+            document.getElementById('exitIpModal').classList.add('show');
+        }
+
+        // 关闭测试出口 IP 弹窗
+        function closeExitIpModal() {
+            document.getElementById('exitIpModal').classList.remove('show');
+        }
+
+        // 运行出口 IP 测试
+        function runExitIpTest() {
+            const socksPort = document.getElementById('testSocksSelect').value;
+            doExitIpTest(socksPort);
+        }
+
+        // 测试直连
+        function runExitIpTestDirect() {
+            doExitIpTest('');
+        }
+
+        // 执行出口 IP 测试
+        function doExitIpTest(socksPort) {
+            document.getElementById('exitIpTestResult').style.display = 'none';
+            document.getElementById('exitIpTestLoading').style.display = 'block';
+
+            fetch(API_BASE + '/test_exit_ip_batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ socks_port: socksPort })
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('exitIpTestLoading').style.display = 'none';
+                document.getElementById('exitIpTestResult').style.display = 'block';
+
+                if (data.success) {
+                    document.getElementById('exitIpValue').textContent = data.exit_ip || '获取失败';
+
+                    const tbody = document.getElementById('exitIpTestBody');
+                    tbody.innerHTML = data.results.map(r => {
+                        const isSuccess = r.http_code === '200' || r.http_code === '301' || r.http_code === '302' || r.http_code === '304';
+                        const statusClass = isSuccess ? 'success' : 'fail';
+                        const statusText = isSuccess ? '成功' : '失败';
+
+                        // 判断是代理还是直连
+                        let routeInfo = '-';
+                        if (r.remote_ip) {
+                            // 如果连接的是代理 IP，说明走了代理
+                            if (r.remote_ip === data.exit_ip || r.remote_ip.includes('.')) {
+                                routeInfo = r.remote_ip;
+                            }
+                        }
+
+                        return `<tr>
+                            <td style="font-size: 12px; word-break: break-all;">${escapeHtml(r.url)}</td>
+                            <td><span class="tag ${isSuccess ? 'tag-shunt' : 'tag-http'}">${r.http_code}</span></td>
+                            <td style="font-family: monospace; font-size: 12px;">${escapeHtml(routeInfo)}</td>
+                            <td><span class="test-status ${statusClass}">${statusText}</span></td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    document.getElementById('exitIpValue').textContent = '测试失败';
+                    document.getElementById('exitIpTestBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#dc3545;">测试失败</td></tr>';
+                }
+            })
+            .catch(err => {
+                document.getElementById('exitIpTestLoading').style.display = 'none';
+                document.getElementById('exitIpTestResult').style.display = 'block';
+                document.getElementById('exitIpValue').textContent = '请求错误';
+                document.getElementById('exitIpTestBody').innerHTML = `<tr><td colspan="4" style="text-align:center;color:#dc3545;">错误: ${err.message}</td></tr>`;
+            });
+        }
+
+        // Tab 切换
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'rules') {
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.getElementById('rulesTab').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.getElementById('nodesTab').classList.add('active');
+            }
+        }
+
+        // 显示消息
+        function showMessage(msg, type) {
+            const el = document.getElementById('message');
+            el.textContent = msg;
+            el.className = 'message ' + type;
+            setTimeout(() => { el.className = 'message'; }, 5000);
+        }
+
+        // 复制到剪贴板（兼容 HTTP 环境）
+        function copyToClipboard(text, btn) {
+            // 尝试使用现代 Clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopySuccess(btn);
+                }).catch(err => {
+                    // 回退到传统方法
+                    fallbackCopy(text, btn);
+                });
+            } else {
+                // HTTP 环境下使用传统方法
+                fallbackCopy(text, btn);
+            }
+        }
+
+        // 传统复制方法（兼容 HTTP）
+        function fallbackCopy(text, btn) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            textArea.style.top = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess(btn);
+                } else {
+                    showMessage('复制失败', 'error');
+                }
+            } catch (err) {
+                showMessage('复制失败: ' + err.message, 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // 显示复制成功状态
+        function showCopySuccess(btn) {
+            const originalText = btn.textContent;
+            btn.textContent = '已复制';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('copied');
+            }, 1500);
+        }
+
+        // 加载分流规则
+        function loadShuntRules() {
+            fetch(API_BASE + '/get_shunt_rules')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.rules) {
+                        allRules = data.rules;
+
+                        // 更新导入时的分流规则选择（显示所有规则）
+                        const select = document.getElementById('shuntRules');
+                        select.innerHTML = data.rules.map(rule =>
+                            `<option value="${rule.id}" ${rule.id === 'ImageDirect' ? 'selected' : ''}>${rule.remarks}</option>`
+                        ).join('');
+
+                        // 渲染分流规则列表（过滤掉默认系统规则）
+                        renderShuntRulesList(data.rules);
+                    }
+                })
+                .catch(err => console.error('加载分流规则失败:', err));
+        }
+
+        // 渲染分流规则列表（过滤掉默认10个规则）
+        function renderShuntRulesList(rules) {
+            const container = document.getElementById('shuntRulesList');
+
+            // 过滤掉默认系统规则
+            const customRules = rules.filter(rule => !DEFAULT_SYSTEM_RULES.includes(rule.id));
+
+            if (!customRules || customRules.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">暂无自定义分流规则</div>';
+                return;
+            }
+
+            container.innerHTML = customRules.map((rule, index) => `
+                <div class="rule-item" data-id="${escapeHtml(rule.id)}">
+                    <div class="rule-info">
+                        <div class="rule-order">
+                            <button onclick="moveRule('${escapeHtml(rule.id)}', 'up')" title="上移">&uarr;</button>
+                            <button onclick="moveRule('${escapeHtml(rule.id)}', 'down')" title="下移">&darr;</button>
+                        </div>
+                        <span class="tag tag-shunt">${escapeHtml(rule.id)}</span>
+                        <span style="color:#333;">${escapeHtml(rule.remarks)}</span>
+                    </div>
+                    <div class="rule-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditRuleModal('${escapeHtml(rule.id)}')">编辑</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteShuntRule('${escapeHtml(rule.id)}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 移动规则顺序
+        function moveRule(ruleId, direction) {
+            fetch(API_BASE + '/move_rule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rule_id: ruleId, direction: direction })
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    loadShuntRules();
+                } else {
+                    showMessage(result.message || '移动失败', 'error');
+                }
+            })
+            .catch(err => showMessage('移动失败: ' + err.message, 'error'));
+        }
+
+        // 打开添加规则弹窗
+        function openAddRuleModal() {
+            document.getElementById('newRuleId').value = '';
+            document.getElementById('newRuleRemarks').value = '';
+            document.getElementById('newRuleDomains').value = '';
+            document.getElementById('newRuleIPs').value = '';
+            document.getElementById('addRuleModal').classList.add('show');
+        }
+
+        // 关闭添加规则弹窗
+        function closeAddRuleModal() {
+            document.getElementById('addRuleModal').classList.remove('show');
+        }
+
+        // 添加分流规则
+        function addShuntRule() {
+            const ruleId = document.getElementById('newRuleId').value.trim();
+            const remarks = document.getElementById('newRuleRemarks').value.trim();
+            const domainList = document.getElementById('newRuleDomains').value.trim();
+            const ipList = document.getElementById('newRuleIPs').value.trim();
+
+            if (!ruleId) {
+                showMessage('请输入规则 ID', 'error');
+                return;
+            }
+            if (!remarks) {
+                showMessage('请输入规则名称', 'error');
+                return;
+            }
+
+            const data = {
+                id: ruleId,
+                remarks: remarks,
+                domain_list: domainList,
+                ip_list: ipList
+            };
+
+            fetch(API_BASE + '/add_shunt_rule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    showMessage('分流规则已添加', 'success');
+                    closeAddRuleModal();
+                    loadShuntRules();
+                } else {
+                    showMessage(result.message || '添加失败', 'error');
+                }
+            })
+            .catch(err => showMessage('添加失败: ' + err.message, 'error'));
+        }
+
+        // 打开编辑规则弹窗
+        function openEditRuleModal(ruleId) {
+            fetch(API_BASE + '/get_rule_detail', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rule_id: ruleId })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('editRuleId').value = ruleId;
+                    document.getElementById('editRuleRemarks').value = data.remarks || '';
+                    document.getElementById('editRuleDomains').value = data.domain_list || '';
+                    document.getElementById('editRuleIPs').value = data.ip_list || '';
+                    document.getElementById('editRuleModal').classList.add('show');
+                } else {
+                    showMessage('获取规则详情失败', 'error');
+                }
+            })
+            .catch(err => showMessage('获取规则详情失败: ' + err.message, 'error'));
+        }
+
+        // 关闭编辑规则弹窗
+        function closeEditRuleModal() {
+            document.getElementById('editRuleModal').classList.remove('show');
+        }
+
+        // 保存分流规则
+        function saveShuntRule() {
+            const ruleId = document.getElementById('editRuleId').value;
+            const remarks = document.getElementById('editRuleRemarks').value.trim();
+            const domainList = document.getElementById('editRuleDomains').value.trim();
+            const ipList = document.getElementById('editRuleIPs').value.trim();
+
+            if (!remarks) {
+                showMessage('请输入规则名称', 'error');
+                return;
+            }
+
+            const data = {
+                rule_id: ruleId,
+                remarks: remarks,
+                domain_list: domainList,
+                ip_list: ipList
+            };
+
+            fetch(API_BASE + '/edit_shunt_rule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    showMessage('分流规则已更新', 'success');
+                    closeEditRuleModal();
+                    loadShuntRules();
+                } else {
+                    showMessage(result.message || '更新失败', 'error');
+                }
+            })
+            .catch(err => showMessage('更新失败: ' + err.message, 'error'));
+        }
+
+        // 删除分流规则
+        function deleteShuntRule(ruleId) {
+            if (!confirm(`确定要删除分流规则 "${ruleId}" 吗？`)) return;
+
+            fetch(API_BASE + '/delete_shunt_rule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rule_id: ruleId })
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    showMessage('分流规则已删除', 'success');
+                    loadShuntRules();
+                } else {
+                    showMessage(result.message || '删除失败', 'error');
+                }
+            })
+            .catch(err => showMessage('删除失败: ' + err.message, 'error'));
+        }
+
+        // 加载现有节点
+        function loadExistingNodes() {
+            fetch(API_BASE + '/get_nodes')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        allNodes = data.nodes || [];
+                        allSocks = data.socks || [];
+
+                        // 统计（过滤系统节点）
+                        const httpNodes = allNodes.filter(n => n.protocol === 'http' && !isSystemNode(n));
+                        const shuntNodes = allNodes.filter(n => n.protocol === '_shunt' && !isSystemNode(n));
+
+                        // 过滤SOCKS - 只统计关联到用户分流节点的
+                        const userShuntIds = shuntNodes.map(n => n.id);
+                        const userSocks = allSocks.filter(s => userShuntIds.includes(s.node));
+
+                        document.getElementById('httpCount').textContent = httpNodes.length;
+                        document.getElementById('shuntCount').textContent = shuntNodes.length;
+                        document.getElementById('socksCount').textContent = userSocks.length;
+
+                        // 组织层级数据
+                        organizeNodeGroups();
+                        renderNodeGroups();
+
+                        // 节点加载完成后立即开始测试
+                        checkNodesStatus();
+                    }
+                })
+                .catch(err => {
+                    console.error('加载节点失败:', err);
+                    document.getElementById('existingNodesList').innerHTML =
+                        '<div style="text-align:center;color:#dc3545;padding:20px;">加载失败</div>';
+                });
+        }
+
+        // 判断是否为系统节点
+        function isSystemNode(node) {
+            if (!node) return false;
+            const remarks = (node.remarks || '').toLowerCase();
+            const id = (node.id || '').toLowerCase();
+            if (node.protocol === '_shunt') {
+                if (!id.startsWith('shunt_') && !remarks.startsWith('分流:')) {
+                    return true;
+                }
+            }
+            if (id === 'myshunt' || remarks.includes('分流总节点')) {
+                return true;
+            }
+            return false;
+        }
+
+        // 组织节点为层级结构
+        function organizeNodeGroups() {
+            nodeGroups = [];
+
+            const httpNodes = allNodes.filter(n => n.protocol === 'http' && !isSystemNode(n));
+
+            for (const httpNode of httpNodes) {
+                const group = {
+                    http: httpNode,
+                    shunt: null,
+                    socks: null
+                };
+
+                const shuntNode = allNodes.find(n => n.protocol === '_shunt' && n.default_node === httpNode.id);
+                if (shuntNode) {
+                    group.shunt = shuntNode;
+                    const socksConfig = allSocks.find(s => s.node === shuntNode.id);
+                    if (socksConfig) {
+                        group.socks = socksConfig;
+                    }
+                }
+
+                nodeGroups.push(group);
+            }
+
+            const referencedShuntIds = nodeGroups.map(g => g.shunt?.id).filter(Boolean);
+            const standaloneShunts = allNodes.filter(n =>
+                n.protocol === '_shunt' &&
+                !referencedShuntIds.includes(n.id) &&
+                !isSystemNode(n)
+            );
+
+            for (const shuntNode of standaloneShunts) {
+                const group = {
+                    http: null,
+                    shunt: shuntNode,
+                    socks: null
+                };
+                const socksConfig = allSocks.find(s => s.node === shuntNode.id);
+                if (socksConfig) {
+                    group.socks = socksConfig;
+                }
+                nodeGroups.push(group);
+            }
+
+            const otherNodes = allNodes.filter(n =>
+                n.protocol !== 'http' &&
+                n.protocol !== '_shunt' &&
+                !isSystemNode(n)
+            );
+            for (const node of otherNodes) {
+                nodeGroups.push({
+                    http: node,
+                    shunt: null,
+                    socks: null,
+                    isOther: true
+                });
+            }
+        }
+
+        // 渲染节点组
+        function renderNodeGroups() {
+            const container = document.getElementById('existingNodesList');
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            let filteredGroups = nodeGroups;
+            if (keyword) {
+                filteredGroups = nodeGroups.filter(g => {
+                    const httpMatch = g.http && (
+                        (g.http.remarks || '').toLowerCase().includes(keyword) ||
+                        (g.http.group || '').toLowerCase().includes(keyword) ||
+                        (g.http.address || '').toLowerCase().includes(keyword)
+                    );
+                    const shuntMatch = g.shunt && (g.shunt.remarks || '').toLowerCase().includes(keyword);
+                    return httpMatch || shuntMatch;
+                });
+            }
+
+            if (filteredGroups.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">暂无节点</div>';
+                return;
+            }
+
+            container.innerHTML = filteredGroups.map((group, idx) => {
+                const mainNode = group.http || group.shunt;
+                if (!mainNode) return '';
+
+                const safeId = escapeHtml(mainNode.id);
+                const isHttp = group.http && group.http.protocol === 'http';
+
+                let html = `<div class="node-group">`;
+
+                // 到期时间显示
+                const expireDate = mainNode.expire_date || '';
+                let expireTag = '';
+                if (expireDate) {
+                    const today = new Date();
+                    const expire = new Date(expireDate);
+                    const daysLeft = Math.ceil((expire - today) / (1000 * 60 * 60 * 24));
+                    let expireColor = '#fd7e14';
+                    if (daysLeft < 0) {
+                        expireColor = '#dc3545';
+                        expireTag = `<span class="tag" style="background:${expireColor};color:white;">已过期</span>`;
+                    } else if (daysLeft <= 7) {
+                        expireColor = '#dc3545';
+                        expireTag = `<span class="tag" style="background:${expireColor};color:white;">${expireDate} (${daysLeft}天)</span>`;
+                    } else if (daysLeft <= 30) {
+                        expireColor = '#ffc107';
+                        expireTag = `<span class="tag" style="background:${expireColor};color:#333;">${expireDate} (${daysLeft}天)</span>`;
+                    } else {
+                        expireTag = `<span class="tag tag-expire">${expireDate}</span>`;
+                    }
+                }
+
+                // 主节点头部
+                html += `<div class="node-group-header">
+                    <div class="node-info">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="node-checkbox" data-id="${safeId}" data-type="${isHttp ? 'http' : 'other'}">
+                        </div>
+                        <span class="tag ${isHttp ? 'tag-http' : 'tag-shunt'}">${isHttp ? 'HTTP' : escapeHtml(mainNode.protocol || '其他')}</span>
+                        <span class="node-title">${escapeHtml(mainNode.remarks || '-')}</span>
+                        ${mainNode.group ? `<span class="tag tag-group">${escapeHtml(mainNode.group)}</span>` : ''}
+                        ${expireTag}
+                        ${mainNode.address ? `<span class="node-address">${escapeHtml(mainNode.address)}:${escapeHtml(mainNode.port || '')}</span>` : ''}
+                        <span id="test-status-${safeId}" class="test-status"></span>
+                    </div>
+                    <div>
+                        ${isHttp ? `<button class="btn btn-warning btn-xs" onclick="testSingleNode('${safeId}')">测试</button>` : ''}
+                        ${isHttp ? `<button class="btn btn-secondary btn-sm" onclick="openEditModal('${safeId}')">编辑</button>` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="deleteNode('${safeId}')">删除</button>
+                    </div>
+                </div>`;
+
+                // 子节点（分流和SOCKS）
+                if (group.shunt || group.socks) {
+                    html += `<div class="node-group-children">`;
+
+                    // 分流节点
+                    if (group.shunt && group.http) {
+                        html += `<div class="node-child">
+                            <div class="node-child-info">
+                                <span class="tag tag-shunt">分流</span>
+                                <span>${escapeHtml(group.shunt.remarks || '-')}</span>
+                            </div>
+                            <span style="color:#888;font-size:12px;">ID: ${escapeHtml(group.shunt.id)}</span>
+                        </div>`;
+                    }
+
+                    // SOCKS 配置（显示完整信息和复制按钮）
+                    if (group.socks) {
+                        const socksIP = gatewayIP;
+                        const socksPort = group.socks.port || '';
+                        const socksFullInfo = `${socksIP}:${socksPort}`;
+
+                        html += `<div class="node-child">
+                            <div class="socks-info">
+                                <span class="tag tag-socks">SOCKS</span>
+                                <div class="socks-detail">
+                                    <span>IP: <strong>${escapeHtml(socksIP)}</strong></span>
+                                    <button class="copy-btn" onclick="copyToClipboard('${socksIP}', this)">复制</button>
+                                </div>
+                                <div class="socks-detail">
+                                    <span>Port: <strong>${escapeHtml(socksPort)}</strong></span>
+                                    <button class="copy-btn" onclick="copyToClipboard('${socksPort}', this)">复制</button>
+                                </div>
+                                <div class="socks-detail">
+                                    <span>${escapeHtml(socksFullInfo)}</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('${socksFullInfo}', this)">复制</button>
+                                </div>
+                                <span style="color:${group.socks.enabled === '1' ? '#28a745' : '#dc3545'};">
+                                    ${group.socks.enabled === '1' ? '已启用' : '已禁用'}
+                                </span>
+                            </div>
+                        </div>`;
+                    }
+
+                    html += `</div>`;
+                }
+
+                html += `</div>`;
+                return html;
+            }).join('');
+        }
+
+        // HTML转义
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // 搜索过滤节点
+        function filterNodes() {
+            renderNodeGroups();
+        }
+
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const checked = document.getElementById('selectAll').checked;
+            document.querySelectorAll('.node-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+        }
+
+        // 批量删除
+        function batchDelete() {
+            const selectedIds = [];
+            document.querySelectorAll('.node-checkbox:checked').forEach(cb => {
+                selectedIds.push(cb.dataset.id);
+            });
+
+            if (selectedIds.length === 0) {
+                showMessage('请先选择要删除的节点', 'error');
+                return;
+            }
+
+            if (!confirm(`确定要删除选中的 ${selectedIds.length} 个节点及其关联配置吗？`)) return;
+
+            fetch(API_BASE + '/batch_delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ node_ids: selectedIds })
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    document.getElementById('selectAll').checked = false;
+                    loadExistingNodes();
+                } else {
+                    showMessage(result.message || '删除失败', 'error');
+                }
+            })
+            .catch(err => showMessage('删除失败: ' + err.message, 'error'));
+        }
+
+        // 打开编辑对话框
+        function openEditModal(nodeId) {
+            const node = allNodes.find(n => n.id === nodeId);
+            if (!node) {
+                showMessage('节点不存在', 'error');
+                return;
+            }
+            document.getElementById('editNodeId').value = node.id;
+            document.getElementById('editRemarks').value = node.remarks || '';
+            document.getElementById('editGroup').value = node.group || '';
+            document.getElementById('editAddress').value = node.address || '';
+            document.getElementById('editPort').value = node.port || '';
+            document.getElementById('editUsername').value = node.username || '';
+            document.getElementById('editPassword').value = node.password || '';
+            document.getElementById('editExpireDate').value = node.expire_date || '';
+            // 隐藏之前的测试结果
+            document.getElementById('testResult').style.display = 'none';
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        // 关闭编辑对话框
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            document.getElementById('testResult').style.display = 'none';
+        }
+
+        // 测试节点连接
+        function testNode() {
+            const address = document.getElementById('editAddress').value;
+            const port = document.getElementById('editPort').value;
+            const username = document.getElementById('editUsername').value;
+            const password = document.getElementById('editPassword').value;
+
+            if (!address || !port) {
+                showMessage('请填写地址和端口', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('testNodeBtn');
+            const resultDiv = document.getElementById('testResult');
+            btn.disabled = true;
+            btn.textContent = '测试中...';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="message info">正在测试连接...</div>';
+
+            fetch(API_BASE + '/test_node', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address, port, username, password })
+            })
+            .then(r => r.json())
+            .then(result => {
+                btn.disabled = false;
+                btn.textContent = '测试连接';
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="message success">连接成功！延迟: ${result.latency}ms</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="message error">${result.message}</div>`;
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.textContent = '测试连接';
+                resultDiv.innerHTML = `<div class="message error">测试失败: ${err.message}</div>`;
+            });
+        }
+
+        // 测试单个节点（从节点列表）
+        function testSingleNode(nodeId) {
+            const node = allNodes.find(n => n.id === nodeId);
+            if (!node || !node.address || !node.port) {
+                showMessage('节点信息不完整', 'error');
+                return;
+            }
+
+            // 更新状态为测试中
+            const statusEl = document.getElementById(`test-status-${nodeId}`);
+            if (statusEl) {
+                statusEl.className = 'test-status testing';
+                statusEl.textContent = '测试中...';
+            }
+
+            fetch(API_BASE + '/test_node', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    address: node.address,
+                    port: node.port,
+                    username: node.username,
+                    password: node.password
+                })
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (statusEl) {
+                    if (result.success) {
+                        statusEl.className = 'test-status success';
+                        statusEl.textContent = `${result.latency}ms`;
+                    } else {
+                        statusEl.className = 'test-status fail';
+                        statusEl.textContent = '失败';
+                    }
+                }
+            })
+            .catch(err => {
+                if (statusEl) {
+                    statusEl.className = 'test-status fail';
+                    statusEl.textContent = '错误';
+                }
+            });
+        }
+
+        // 保存节点
+        function saveNode() {
+            const data = {
+                node_id: document.getElementById('editNodeId').value,
+                remarks: document.getElementById('editRemarks').value,
+                group: document.getElementById('editGroup').value,
+                address: document.getElementById('editAddress').value,
+                port: document.getElementById('editPort').value,
+                username: document.getElementById('editUsername').value,
+                password: document.getElementById('editPassword').value,
+                expire_date: document.getElementById('editExpireDate').value
+            };
+
+            fetch(API_BASE + '/edit_node', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    showMessage('节点已更新', 'success');
+                    closeEditModal();
+                    loadExistingNodes();
+                } else {
+                    showMessage(result.message || '更新失败', 'error');
+                }
+            })
+            .catch(err => showMessage('更新失败: ' + err.message, 'error'));
+        }
+
+        // 解析节点（内部函数）
+        async function parseNodes() {
+            const input = document.getElementById('nodeInput').value.trim();
+            const startPort = parseInt(document.getElementById('startPort').value);
+            const lines = input.split('\n').filter(line => line.trim());
+
+            if (lines.length === 0) {
+                return [];
+            }
+
+            // 先获取已使用的端口列表
+            let usedPorts = [];
+            try {
+                const response = await fetch(API_BASE + '/get_used_ports');
+                const data = await response.json();
+                if (data.success && data.ports) {
+                    usedPorts = data.ports;
+                }
+            } catch (e) {
+                console.error('获取已用端口失败:', e);
+            }
+
+            parsedNodes = [];
+            let currentPort = startPort;
+
+            // 找到下一个可用端口的函数
+            function getNextAvailablePort() {
+                while (usedPorts.includes(currentPort)) {
+                    currentPort++;
+                }
+                const port = currentPort;
+                currentPort++;
+                return port;
+            }
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                let ip, port, username, password, expireDate = '', remarks = '';
+
+                // 检测格式：空格分隔 vs 冒号分隔
+                const spaceParts = trimmedLine.split(/\s+/);
+
+                if (spaceParts.length >= 3 && spaceParts[0].includes(':')) {
+                    // 空格分隔格式: "IP:端口 用户名 密码 到期时间 备注"
+                    const ipPort = spaceParts[0].split(':');
+                    if (ipPort.length === 2) {
+                        ip = ipPort[0];
+                        port = ipPort[1];
+                        username = spaceParts[1];
+                        password = spaceParts[2];
+
+                        for (let i = 3; i < spaceParts.length; i++) {
+                            if (/^\d{4}-\d{2}-\d{2}$/.test(spaceParts[i])) {
+                                expireDate = spaceParts[i];
+                            } else {
+                                remarks = remarks ? remarks + ' ' + spaceParts[i] : spaceParts[i];
+                            }
+                        }
+
+                        parsedNodes.push({
+                            ip, port, username, password, expireDate, remarks,
+                            socksPort: getNextAvailablePort()
+                        });
+                        continue;
+                    }
+                }
+
+                // 冒号分隔格式
+                const colonParts = trimmedLine.split(':');
+                if (colonParts.length >= 4) {
+                    ip = colonParts[0];
+                    port = colonParts[1];
+                    username = colonParts[2];
+                    password = colonParts[3];
+
+                    if (colonParts.length >= 6) {
+                        expireDate = colonParts[4];
+                        remarks = colonParts.slice(5).join(':');
+                    } else if (colonParts.length === 5) {
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(colonParts[4])) {
+                            expireDate = colonParts[4];
+                        } else {
+                            remarks = colonParts[4];
+                        }
+                    }
+
+                    parsedNodes.push({
+                        ip, port, username, password, expireDate, remarks,
+                        socksPort: getNextAvailablePort()
+                    });
+                }
+            }
+
+            return parsedNodes;
+        }
+
+        // 导入节点
+        async function importNodes() {
+            const input = document.getElementById('nodeInput').value.trim();
+            if (!input) {
+                showMessage('请输入节点信息', 'error');
+                return;
+            }
+
+            // 解析节点
+            await parseNodes();
+
+            if (parsedNodes.length === 0) {
+                showMessage('没有解析到有效节点，请检查格式', 'error');
+                return;
+            }
+
+            showMessage(`正在导入 ${parsedNodes.length} 个节点...`, 'success');
+
+            // 先检查是否有重复节点
+            try {
+                const checkResponse = await fetch(API_BASE + '/check_node_exists', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nodes: parsedNodes })
+                });
+                const checkResult = await checkResponse.json();
+
+                if (checkResult.duplicates && checkResult.duplicates.length > 0) {
+                    // 保存重复节点列表
+                    duplicateNodes = checkResult.duplicates;
+                    const nonDupCount = parsedNodes.length - duplicateNodes.length;
+
+                    // 显示重复节点弹窗
+                    document.getElementById('duplicateList').innerHTML = duplicateNodes
+                        .map(d => `<div style="padding: 5px 0; border-bottom: 1px solid #e0e0e0;">${escapeHtml(d)}</div>`)
+                        .join('');
+                    document.getElementById('duplicateInfo').textContent =
+                        `共 ${parsedNodes.length} 个节点，${duplicateNodes.length} 个重复，${nonDupCount} 个可导入`;
+                    document.getElementById('duplicateModal').classList.add('show');
+                    return;
+                }
+            } catch (e) {
+                console.error('检查重复节点失败:', e);
+            }
+
+            // 执行导入
+            doImport(parsedNodes);
+        }
+
+        // 跳过重复节点继续导入
+        function importNodesSkipDuplicates() {
+            closeDuplicateModal();
+
+            // 过滤掉重复节点
+            const nodesToImport = parsedNodes.filter(node => {
+                const key = `${node.ip}:${node.port}`;
+                return !duplicateNodes.includes(key);
+            });
+
+            if (nodesToImport.length === 0) {
+                showMessage('没有可导入的节点', 'error');
+                return;
+            }
+
+            doImport(nodesToImport);
+        }
+
+        // 实际执行导入
+        function doImport(nodes) {
+            const startPort = parseInt(document.getElementById('startPort').value);
+            const groupName = document.getElementById('groupName').value || '批量导入';
+            const shuntSelect = document.getElementById('shuntRules');
+            const selectedShunts = Array.from(shuntSelect.selectedOptions).map(opt => opt.value);
+
+            const data = {
+                nodes: nodes,
+                start_port: startPort,
+                group_name: groupName,
+                shunt_rules: selectedShunts
+            };
+
+            fetch(API_BASE + '/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    // 显示成功弹窗
+                    document.getElementById('successMessage').textContent = `成功导入 ${result.imported} 个节点`;
+                    document.getElementById('successModal').classList.add('show');
+
+                    // 清空输入
+                    document.getElementById('nodeInput').value = '';
+                    parsedNodes = [];
+                    duplicateNodes = [];
+                    document.getElementById('nodeCount').textContent = '0';
+                    document.getElementById('portRange').textContent = '-';
+
+                    // 刷新节点列表
+                    loadExistingNodes();
+
+                    // 自动重启 Passwall2
+                    fetch(API_BASE + '/restart', { method: 'POST' });
+
+                    // 倒计时关闭
+                    let countdown = 3;
+                    const countdownEl = document.getElementById('countdown');
+                    const timer = setInterval(() => {
+                        countdown--;
+                        countdownEl.textContent = countdown;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            closeSuccessModal();
+                        }
+                    }, 1000);
+                } else {
+                    showMessage(result.message || '导入失败', 'error');
+                }
+            })
+            .catch(err => showMessage('导入失败: ' + err.message, 'error'));
+        }
+
+        // 关闭成功弹窗
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.remove('show');
+        }
+
+        // 关闭重复节点弹窗
+        function closeDuplicateModal() {
+            document.getElementById('duplicateModal').classList.remove('show');
+        }
+
+        // 删除节点
+        function deleteNode(nodeId) {
+            if (!confirm('确定要删除这个节点及其关联的分流和SOCKS配置吗？')) return;
+
+            fetch(API_BASE + '/delete_node', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({node_id: nodeId})
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    loadExistingNodes();
+                } else {
+                    showMessage(result.message || '删除失败', 'error');
+                }
+            })
+            .catch(err => showMessage('删除失败: ' + err.message, 'error'));
+        }
+
+        // 重启 Passwall2
+        function restartPasswall() {
+            if (!confirm('确定要重启 Passwall2 服务吗？')) return;
+
+            fetch(API_BASE + '/restart', { method: 'POST' })
+                .then(r => r.json())
+                .then(result => {
+                    if (result.success) {
+                        showMessage('Passwall2 正在重启...', 'success');
+                    } else {
+                        showMessage(result.message || '重启失败', 'error');
+                    }
+                })
+                .catch(err => showMessage('重启失败: ' + err.message, 'error'));
+        }
+
+        // ========== 在线更新功能 ==========
+
+        // 检查更新
+        function checkUpdate() {
+            document.getElementById('updateModal').classList.add('show');
+            document.getElementById('updateContent').innerHTML = '<div class="loading">正在检查更新...</div>';
+            document.getElementById('updateActions').style.display = 'none';
+
+            fetch(API_BASE + '/check_update', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        latestVersionInfo = data;
+                        if (data.has_update) {
+                            document.getElementById('updateContent').innerHTML = `
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <div style="font-size: 48px; color: #28a745;">🎉</div>
+                                    <h4 style="margin: 15px 0;">发现新版本</h4>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                    <p><strong>当前版本：</strong>${CURRENT_VERSION}</p>
+                                    <p><strong>最新版本：</strong>${escapeHtml(data.latest_version)}</p>
+                                </div>
+                                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px;">
+                                    <strong>更新内容：</strong>
+                                    <div style="margin-top: 10px; white-space: pre-wrap;">${escapeHtml(data.changelog || '暂无更新说明')}</div>
+                                </div>
+                            `;
+                            document.getElementById('updateActions').style.display = 'block';
+                        } else {
+                            document.getElementById('updateContent').innerHTML = `
+                                <div style="text-align: center;">
+                                    <div style="font-size: 48px; color: #667eea;">✓</div>
+                                    <h4 style="margin: 15px 0;">已是最新版本</h4>
+                                    <p style="color: #666;">当前版本：${CURRENT_VERSION}</p>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        document.getElementById('updateContent').innerHTML = `
+                            <div style="text-align: center; color: #dc3545;">
+                                <div style="font-size: 48px;">⚠</div>
+                                <h4 style="margin: 15px 0;">检查失败</h4>
+                                <p>${escapeHtml(data.message || '无法连接更新服务器')}</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('updateContent').innerHTML = `
+                        <div style="text-align: center; color: #dc3545;">
+                            <div style="font-size: 48px;">⚠</div>
+                            <h4 style="margin: 15px 0;">检查失败</h4>
+                            <p>网络错误: ${escapeHtml(err.message)}</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // 执行更新
+        function doUpdate() {
+            document.getElementById('updateContent').innerHTML = '<div class="loading">正在下载更新...</div>';
+            document.getElementById('updateActions').style.display = 'none';
+
+            fetch(API_BASE + '/do_update', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('updateContent').innerHTML = `
+                            <div style="text-align: center;">
+                                <div style="font-size: 48px; color: #28a745;">✓</div>
+                                <h4 style="margin: 15px 0;">更新成功</h4>
+                                <p style="color: #666;">页面将在 3 秒后自动刷新...</p>
+                            </div>
+                        `;
+                        setTimeout(() => {
+                            location.reload();
+                        }, 3000);
+                    } else {
+                        document.getElementById('updateContent').innerHTML = `
+                            <div style="text-align: center; color: #dc3545;">
+                                <div style="font-size: 48px;">✗</div>
+                                <h4 style="margin: 15px 0;">更新失败</h4>
+                                <p>${escapeHtml(data.message || '下载或安装失败')}</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('updateContent').innerHTML = `
+                        <div style="text-align: center; color: #dc3545;">
+                            <div style="font-size: 48px;">✗</div>
+                            <h4 style="margin: 15px 0;">更新失败</h4>
+                            <p>网络错误: ${escapeHtml(err.message)}</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // 关闭更新弹窗
+        function closeUpdateModal() {
+            document.getElementById('updateModal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

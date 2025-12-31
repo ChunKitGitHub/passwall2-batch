@@ -1,0 +1,7 @@
+Package: luci-app-passwall2-batch
+Version: 1.0.0-1
+Depends: libc, luci-base
+Section: luci
+Architecture: all
+Installed-Size: 12000
+Description: Passwall2 Batch Import - 批量导入HTTP节点
