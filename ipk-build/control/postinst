@@ -3,16 +3,16 @@
 # 清除LuCI缓存
 rm -rf /tmp/luci-modulecache /tmp/luci-indexcache
 
-# 配置独立的 uhttpd 实例用于 passwall2-batch
-if ! uci -q get uhttpd.passwall2_batch >/dev/null; then
-    uci set uhttpd.passwall2_batch=uhttpd
-    uci set uhttpd.passwall2_batch.listen_http='0.0.0.0:8099'
-    uci set uhttpd.passwall2_batch.home='/www/passwall2-batch'
-    uci set uhttpd.passwall2_batch.cgi_prefix='/cgi-bin'
-    uci set uhttpd.passwall2_batch.script_timeout='60'
-    uci set uhttpd.passwall2_batch.network_timeout='30'
-    uci commit uhttpd
-    /etc/init.d/uhttpd restart
-fi
+# 创建 cgi-bin 目录和符号链接
+mkdir -p /www/passwall2-batch/cgi-bin
+ln -sf /www/passwall2-batch/api.cgi /www/passwall2-batch/cgi-bin/api.cgi
+
+# 设置权限
+chmod 755 /www/passwall2-batch/api.cgi
+chmod 755 /www/passwall2-batch/cgi-bin/api.cgi 2>/dev/null
+
+# 启动服务
+/etc/init.d/passwall2-batch enable 2>/dev/null
+/etc/init.d/passwall2-batch restart 2>/dev/null
 
 exit 0
