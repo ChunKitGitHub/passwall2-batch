@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Passwall2 批量导入工具 - CGI API
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
 send_json() {
     echo "Content-Type: application/json"
@@ -837,8 +838,8 @@ test_exit_ip_batch() {
 
 # 当前版本号
 CURRENT_VERSION="1.0.0"
-UPDATE_URL="https://raw.githubusercontent.com/ChunKitGitHub/passwall2-batch/main/version.json"
-IPK_URL="https://raw.githubusercontent.com/ChunKitGitHub/passwall2-batch/main/passwall2-batch_latest.ipk"
+UPDATE_URL="https://cdn.jsdelivr.net/gh/ChunKitGitHub/passwall2-batch@main/version.json"
+IPK_URL="https://cdn.jsdelivr.net/gh/ChunKitGitHub/passwall2-batch@main/passwall2-batch_latest.ipk"
 
 # 检查更新
 check_update() {
@@ -858,8 +859,8 @@ check_update() {
         return
     fi
 
-    # 处理 changelog 中的特殊字符：换行转义、引号转义
-    changelog=$(echo "$changelog" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+    # 处理 changelog 中的特殊字符：换行转空格、引号转义
+    changelog=$(printf "%s" "$changelog" | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g')
 
     # 比较版本号
     local has_update="false"
