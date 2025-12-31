@@ -851,12 +851,15 @@ check_update() {
     fi
 
     local latest_version=$(echo "$version_info" | jsonfilter -e '@.version' 2>/dev/null)
-    local changelog=$(echo "$version_info" | jsonfilter -e '@.changelog' 2>/dev/null | sed 's/"/\\"/g')
+    local changelog=$(echo "$version_info" | jsonfilter -e '@.changelog' 2>/dev/null)
 
     if [ -z "$latest_version" ]; then
         send_json "{\"success\":false,\"message\":\"无法解析版本信息\"}"
         return
     fi
+
+    # 处理 changelog 中的特殊字符：换行转义、引号转义
+    changelog=$(echo "$changelog" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
 
     # 比较版本号
     local has_update="false"
