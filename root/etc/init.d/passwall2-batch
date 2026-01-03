@@ -5,7 +5,39 @@ START=99
 STOP=10
 USE_PROCD=1
 
+# 检测并处理代理软件冲突
+check_proxy_conflict() {
+    local conflict_found=0
+
+    # 检测 mihomo (NekoBox)
+    if pidof mihomo >/dev/null 2>&1; then
+        logger -t passwall2-batch "检测到 mihomo 正在运行，正在停止以避免冲突..."
+        killall mihomo 2>/dev/null
+        conflict_found=1
+    fi
+
+    # 删除 TUN 接口
+    if ip link show Meta >/dev/null 2>&1; then
+        logger -t passwall2-batch "检测到 Meta TUN 接口，正在删除..."
+        ip link del Meta 2>/dev/null
+        conflict_found=1
+    fi
+
+    # 清理路由规则
+    ip rule del lookup 2022 2>/dev/null
+    ip rule del lookup 2022 2>/dev/null
+
+    # 如果发现冲突，重启 Passwall2
+    if [ "$conflict_found" = "1" ]; then
+        sleep 1
+        /etc/init.d/passwall2 restart 2>/dev/null &
+    fi
+}
+
 start_service() {
+    # 检测代理冲突
+    check_proxy_conflict
+
     # 修复权限
     chmod 644 /www/passwall2-batch/index.html 2>/dev/null
     chmod 755 /www/passwall2-batch/api.cgi 2>/dev/null

@@ -11,8 +11,47 @@ ln -sf /www/passwall2-batch/api.cgi /www/passwall2-batch/cgi-bin/api.cgi
 chmod 755 /www/passwall2-batch/api.cgi
 chmod 755 /www/passwall2-batch/cgi-bin/api.cgi 2>/dev/null
 
-# 启动服务
+# ========== 处理代理软件冲突 ==========
+# 检测并停止 NekoBox/mihomo（会导致 Passwall2 SOCKS 无法使用）
+if pidof mihomo >/dev/null 2>&1; then
+    echo "检测到 mihomo 正在运行，正在停止..."
+    killall mihomo 2>/dev/null
+    sleep 1
+fi
+
+# 删除 TUN 接口（如果存在）
+if ip link show Meta >/dev/null 2>&1; then
+    echo "检测到 Meta TUN 接口，正在删除..."
+    ip link del Meta 2>/dev/null
+fi
+
+# 清理可能残留的路由规则
+ip rule del lookup 2022 2>/dev/null
+ip rule del lookup 2022 2>/dev/null
+ip rule del lookup 2022 2>/dev/null
+
+# 禁用 neko 开机自启（避免重启后冲突）
+if [ -f /etc/init.d/neko ]; then
+    echo "检测到 NekoBox，正在禁用开机自启..."
+    /etc/init.d/neko stop 2>/dev/null
+    /etc/init.d/neko disable 2>/dev/null
+    rm -f /etc/rc.d/S99neko 2>/dev/null
+fi
+
+# 同样处理其他可能冲突的代理软件
+for service in clash openclash shadowsocksr passwall; do
+    if [ -f "/etc/init.d/$service" ] && [ "$service" != "passwall2" ]; then
+        # 只禁用，不停止（让用户自己决定）
+        # /etc/init.d/$service disable 2>/dev/null
+        :
+    fi
+done
+
+# ========== 启动服务 ==========
 /etc/init.d/passwall2-batch enable 2>/dev/null
 /etc/init.d/passwall2-batch restart 2>/dev/null
+
+# 重启 Passwall2 确保 SOCKS 正常
+/etc/init.d/passwall2 restart 2>/dev/null &
 
 exit 0
