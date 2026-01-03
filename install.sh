@@ -7,7 +7,7 @@ echo "====================================="
 
 # 下载 IPK
 echo "正在下载安装包..."
-wget -O /tmp/passwall2-batch.ipk "http://8.138.59.101:15381/s/rRdCStAFZ5sZj7r"
+wget -O /tmp/passwall2-batch.ipk "http://8.138.59.101:15381/s/rRdCStAFZ5sZj7r/download"
 
 if [ ! -f /tmp/passwall2-batch.ipk ] || [ ! -s /tmp/passwall2-batch.ipk ]; then
     echo "下载失败，请检查网络连接"
