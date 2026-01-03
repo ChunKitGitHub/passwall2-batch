@@ -838,8 +838,7 @@ test_exit_ip_batch() {
 
 # 当前版本号
 CURRENT_VERSION="1.0.0"
-UPDATE_URL="https://cdn.jsdelivr.net/gh/ChunKitGitHub/passwall2-batch@main/version.json"
-IPK_URL="https://cdn.jsdelivr.net/gh/ChunKitGitHub/passwall2-batch@main/passwall2-batch_latest.ipk"
+UPDATE_URL="http://8.138.59.101:15381/s/7EnfyfaqLzxCodj"
 
 # 检查更新
 check_update() {
@@ -852,15 +851,12 @@ check_update() {
     fi
 
     local latest_version=$(echo "$version_info" | jsonfilter -e '@.version' 2>/dev/null)
-    local changelog=$(echo "$version_info" | jsonfilter -e '@.changelog' 2>/dev/null)
+    local ipk_url=$(echo "$version_info" | jsonfilter -e '@.url' 2>/dev/null)
 
     if [ -z "$latest_version" ]; then
         send_json "{\"success\":false,\"message\":\"无法解析版本信息\"}"
         return
     fi
-
-    # 处理 changelog 中的特殊字符：换行转空格、引号转义
-    changelog=$(printf "%s" "$changelog" | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g')
 
     # 比较版本号
     local has_update="false"
@@ -873,15 +869,31 @@ check_update() {
         fi
     fi
 
-    send_json "{\"success\":true,\"current_version\":\"$CURRENT_VERSION\",\"latest_version\":\"$latest_version\",\"has_update\":$has_update,\"changelog\":\"$changelog\"}"
+    send_json "{\"success\":true,\"current_version\":\"$CURRENT_VERSION\",\"latest_version\":\"$latest_version\",\"has_update\":$has_update,\"ipk_url\":\"$ipk_url\"}"
 }
 
 # 执行更新
 do_update() {
     local tmp_file="/tmp/passwall2-batch_update.ipk"
 
+    # 先获取版本信息中的下载 URL
+    local version_info
+    version_info=$(curl -s --connect-timeout 10 --max-time 20 "$UPDATE_URL" 2>/dev/null)
+
+    if [ -z "$version_info" ]; then
+        send_json "{\"success\":false,\"message\":\"无法获取更新信息\"}"
+        return
+    fi
+
+    local ipk_url=$(echo "$version_info" | jsonfilter -e '@.url' 2>/dev/null)
+
+    if [ -z "$ipk_url" ]; then
+        send_json "{\"success\":false,\"message\":\"无法获取下载地址\"}"
+        return
+    fi
+
     # 下载新版本
-    curl -s --connect-timeout 30 --max-time 120 -o "$tmp_file" "$IPK_URL" 2>/dev/null
+    curl -s --connect-timeout 30 --max-time 120 -o "$tmp_file" "$ipk_url" 2>/dev/null
 
     if [ ! -f "$tmp_file" ] || [ ! -s "$tmp_file" ]; then
         send_json "{\"success\":false,\"message\":\"下载更新包失败\"}"

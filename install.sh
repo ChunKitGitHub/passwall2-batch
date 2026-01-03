@@ -7,9 +7,9 @@ echo "====================================="
 
 # 下载 IPK
 echo "正在下载安装包..."
-wget -q --show-progress -O /tmp/passwall2-batch.ipk "https://cdn.jsdelivr.net/gh/ChunKitGitHub/passwall2-batch@main/passwall2-batch_latest.ipk"
+wget -O /tmp/passwall2-batch.ipk "http://8.138.59.101:15381/s/rRdCStAFZ5sZj7r"
 
-if [ ! -f /tmp/passwall2-batch.ipk ]; then
+if [ ! -f /tmp/passwall2-batch.ipk ] || [ ! -s /tmp/passwall2-batch.ipk ]; then
     echo "下载失败，请检查网络连接"
     exit 1
 fi
